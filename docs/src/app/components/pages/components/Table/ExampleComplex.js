@@ -19,32 +19,37 @@ const tableData = [
   {
     name: 'John Smith',
     status: 'Employed',
-    selected: true,
+    id: 1,
   },
   {
     name: 'Randal White',
     status: 'Unemployed',
+    id: 2,
   },
   {
     name: 'Stephanie Sanders',
     status: 'Employed',
-    selected: true,
+    id: 3,
   },
   {
     name: 'Steve Brown',
     status: 'Employed',
+    id: 4,
   },
   {
     name: 'Joyce Whitten',
     status: 'Employed',
+    id: 5,
   },
   {
     name: 'Samuel Roberts',
     status: 'Employed',
+    id: 6,
   },
   {
     name: 'Adam Moore',
     status: 'Employed',
+    id: 7,
   },
 ];
 
@@ -59,12 +64,23 @@ export default class TableExampleComplex extends React.Component {
       stripedRows: false,
       showRowHover: false,
       selectable: true,
-      multiSelectable: false,
-      enableSelectAll: false,
-      deselectOnClickaway: true,
+      multiSelectable: true,
+      enableSelectAll: true,
+      deselectOnClickaway: false,
       showCheckboxes: true,
       height: '300px',
+      searchText: '',
+      selectedKeys: [],
+      filteredUsers: tableData,
     };
+  }
+
+  filteredUsers = () => {
+    const re = new RegExp(this.state.searchText, 'i');
+    const filteredUsers = this.state.searchText ?
+      tableData.filter((user) => re.test(`${user.name}`)) : tableData;
+
+    return filteredUsers;
   }
 
   handleToggle = (event, toggled) => {
@@ -77,7 +93,56 @@ export default class TableExampleComplex extends React.Component {
     this.setState({height: event.target.value});
   };
 
+  handleSearchOnChange = (event) => {
+    event.preventDefault();
+
+    this.setState({
+      searchText: event.target.value,
+    });
+  }
+
+  handleRowSelection = (selection) => {
+    console.log(selection); // eslint-disable-line no-console
+
+    if (selection === 'all') {
+      const temp = [];
+      tableData.map((user) => temp.push(user.id));
+      const selectedKeys = temp;
+      this.setState({
+        selectedKeys,
+      });
+
+      return;
+    } else if (selection === 'none') {
+      this.setState({
+        selectedKeys: [],
+      });
+
+      return;
+    }
+
+    const filteredUsers = this.filteredUsers();
+    const user = filteredUsers[selection];
+    const selectedKeys = this.state.selectedKeys;
+
+    if (selectedKeys.includes(user.id)) {
+      selectedKeys.splice(selectedKeys.indexOf(user.id), 1);
+    } else {
+      selectedKeys.push(user.id);
+    }
+
+    this.setState({selectedKeys});
+  }
+
   render() {
+    const {selectedKeys} = this.state;
+
+    // console.log(`selected: ${this.state.selectedKeys}`); // eslint-disable-line no-console
+    const filteredUsers = this.filteredUsers();
+    const selectedUsers = filteredUsers.filter((user) => selectedKeys.includes(user.id));
+    const selectedRows = selectedUsers.map((user) => filteredUsers.indexOf(user));
+    const allRowsSelected = filteredUsers.length === selectedRows.length;
+
     return (
       <div>
         <Table
@@ -86,6 +151,9 @@ export default class TableExampleComplex extends React.Component {
           fixedFooter={this.state.fixedFooter}
           selectable={this.state.selectable}
           multiSelectable={this.state.multiSelectable}
+          selectedRows={selectedRows}
+          allRowsSelected={allRowsSelected}
+          onRowSelection={this.handleRowSelection}
         >
           <TableHeader
             displaySelectAll={this.state.showCheckboxes}
@@ -95,6 +163,11 @@ export default class TableExampleComplex extends React.Component {
             <TableRow>
               <TableHeaderColumn colSpan="3" tooltip="Super Header" style={{textAlign: 'center'}}>
                 Super Header
+                <TextField
+                  hintText={'Filter skelter'}
+                  onChange={this.handleSearchOnChange}
+                  style={{display: 'block', width: '100%'}}
+                />
               </TableHeaderColumn>
             </TableRow>
             <TableRow>
@@ -109,13 +182,20 @@ export default class TableExampleComplex extends React.Component {
             showRowHover={this.state.showRowHover}
             stripedRows={this.state.stripedRows}
           >
-            {tableData.map( (row, index) => (
-              <TableRow key={index} selected={row.selected}>
-                <TableRowColumn>{index}</TableRowColumn>
-                <TableRowColumn>{row.name}</TableRowColumn>
-                <TableRowColumn>{row.status}</TableRowColumn>
-              </TableRow>
-              ))}
+            {filteredUsers.map((user) => {
+              // const selected = this.state.selectedKeys.includes(user.id);
+              // console.log(`${user.name}: ${selected ? 'true' : 'false'}`); // eslint-disable-line no-console
+
+              return (
+                <TableRow
+                  key={user.id}
+                >
+                  <TableRowColumn>{user.id}</TableRowColumn>
+                  <TableRowColumn>{user.name}</TableRowColumn>
+                  <TableRowColumn>{user.status}</TableRowColumn>
+                </TableRow>
+              );
+            })}
           </TableBody>
           <TableFooter
             adjustForCheckbox={this.state.showCheckboxes}

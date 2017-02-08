@@ -116,6 +116,10 @@ class Table extends Component {
      */
     selectable: PropTypes.bool,
     /**
+     * Selected rows
+     */
+    selectedRows: PropTypes.array,
+    /**
      * Override the inline-styles of the root element.
      */
     style: PropTypes.object,
@@ -132,21 +136,12 @@ class Table extends Component {
     height: 'inherit',
     multiSelectable: false,
     selectable: true,
+    selectedRows: [],
   };
 
   static contextTypes = {
     muiTheme: PropTypes.object.isRequired,
   };
-
-  state = {
-    allRowsSelected: false,
-  };
-
-  componentWillMount() {
-    if (this.props.allRowsSelected) {
-      this.setState({allRowsSelected: true});
-    }
-  }
 
   isScrollbarVisible() {
     const tableDivHeight = this.refs.tableDiv.clientHeight;
@@ -161,7 +156,7 @@ class Table extends Component {
       {
         enableSelectAll: base.props.enableSelectAll && this.props.selectable && this.props.multiSelectable,
         onSelectAll: this.onSelectAll,
-        selectAllSelected: this.state.allRowsSelected,
+        selectAllSelected: this.props.allRowsSelected,
       }
     );
   }
@@ -170,7 +165,7 @@ class Table extends Component {
     return React.cloneElement(
       base,
       {
-        allRowsSelected: this.state.allRowsSelected,
+        allRowsSelected: this.props.allRowsSelected,
         multiSelectable: this.props.multiSelectable,
         onCellClick: this.onCellClick,
         onCellHover: this.onCellHover,
@@ -179,6 +174,7 @@ class Table extends Component {
         onRowHoverExit: this.onRowHoverExit,
         onRowSelection: this.onRowSelection,
         selectable: this.props.selectable,
+        selectedRows: this.props.selectedRows,
         style: Object.assign({height: this.props.height}, base.props.style),
       }
     );
@@ -208,21 +204,18 @@ class Table extends Component {
     if (this.props.onRowHoverExit) this.props.onRowHoverExit(rowNumber);
   };
 
-  onRowSelection = (selectedRows) => {
-    if (this.state.allRowsSelected) this.setState({allRowsSelected: false});
-    if (this.props.onRowSelection) this.props.onRowSelection(selectedRows);
+  onRowSelection = (selectedRow) => {
+    if (this.props.onRowSelection) this.props.onRowSelection(selectedRow);
   };
 
   onSelectAll = () => {
     if (this.props.onRowSelection) {
-      if (!this.state.allRowsSelected) {
+      if (!this.props.allRowsSelected) {
         this.props.onRowSelection('all');
       } else {
         this.props.onRowSelection('none');
       }
     }
-
-    this.setState({allRowsSelected: !this.state.allRowsSelected});
   };
 
   render() {

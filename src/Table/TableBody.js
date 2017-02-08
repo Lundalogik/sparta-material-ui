@@ -90,6 +90,10 @@ class TableBody extends Component {
      */
     selectable: PropTypes.bool,
     /**
+     * Selected rows
+     */
+    selectedRows: PropTypes.array,
+     /**
      * If true, table rows will be highlighted when
      * the cursor is hovering over the row. The default
      * value is false.
@@ -114,6 +118,7 @@ class TableBody extends Component {
     preScanRows: true,
     selectable: true,
     style: {},
+    selectedRows: [],
   };
 
   static contextTypes = {
@@ -129,17 +134,9 @@ class TableBody extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (this.props.allRowsSelected !== nextProps.allRowsSelected) {
-      if (!nextProps.allRowsSelected) {
-        this.setState({
-          selectedRows: [],
-        });
-      } else {
-        this.setState({
-          selectedRows: this.calculatePreselectedRows(nextProps),
-        });
-      }
-    }
+    this.setState({
+      selectedRows: nextProps.selectedRows,
+    });
   }
 
   handleClickAway = () => {
@@ -148,7 +145,7 @@ class TableBody extends Component {
         selectedRows: [],
       });
       if (this.props.onRowSelection) {
-        this.props.onRowSelection([]);
+        this.props.onRowSelection('none');
       }
     }
   };
@@ -281,46 +278,7 @@ class TableBody extends Component {
   };
 
   processRowSelection(event, rowNumber) {
-    let selectedRows = this.state.selectedRows;
-
-    if (event.shiftKey && this.props.multiSelectable && selectedRows.length) {
-      const lastIndex = selectedRows.length - 1;
-      const lastSelection = selectedRows[lastIndex];
-
-      if (typeof lastSelection === 'object') {
-        lastSelection.end = rowNumber;
-      } else {
-        selectedRows.splice(lastIndex, 1, {start: lastSelection, end: rowNumber});
-      }
-    } else if (((event.ctrlKey && !event.metaKey) || (event.metaKey && !event.ctrlKey)) && this.props.multiSelectable) {
-      const idx = selectedRows.indexOf(rowNumber);
-      if (idx < 0) {
-        let foundRange = false;
-        for (let i = 0; i < selectedRows.length; i++) {
-          const range = selectedRows[i];
-          if (typeof range !== 'object') continue;
-
-          if (this.isValueInRange(rowNumber, range)) {
-            foundRange = true;
-            const values = this.splitRange(range, rowNumber);
-            selectedRows.splice(i, 1, ...values);
-          }
-        }
-
-        if (!foundRange) selectedRows.push(rowNumber);
-      } else {
-        selectedRows.splice(idx, 1);
-      }
-    } else {
-      if (selectedRows.length === 1 && selectedRows[0] === rowNumber) {
-        selectedRows = [];
-      } else {
-        selectedRows = [rowNumber];
-      }
-    }
-
-    this.setState({selectedRows: selectedRows});
-    if (this.props.onRowSelection) this.props.onRowSelection(this.flattenRanges(selectedRows));
+    if (this.props.onRowSelection) this.props.onRowSelection(rowNumber);
   }
 
   splitRange(range, splitPoint) {
