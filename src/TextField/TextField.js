@@ -105,7 +105,7 @@ const getStyles = (props, context, state) => {
  * @returns True if the string provided is valid, false otherwise.
  */
 function isValid(value) {
-  return value !== '' && value !== undefined && value !== null;
+  return value !== '' && value !== undefined && value !== null && !(Array.isArray(value) && value.length === 0);
 }
 
 class TextField extends Component {
@@ -348,7 +348,9 @@ class TextField extends Component {
   };
 
   handleInputChange = (event) => {
-    this.setState({hasValue: isValid(event.target.value)});
+    if (!this.props.hasOwnProperty('value')) {
+      this.setState({hasValue: isValid(event.target.value)});
+    }
     if (this.props.onChange) {
       this.props.onChange(event, event.target.value);
     }
@@ -462,6 +464,7 @@ class TextField extends Component {
           textareaStyle={Object.assign(styles.textarea, styles.inputNative, textareaStyle)}
           rows={rows}
           rowsMax={rowsMax}
+          hintText={hintText}
           {...other}
           {...inputProps}
           onHeightChange={this.handleHeightChange}
