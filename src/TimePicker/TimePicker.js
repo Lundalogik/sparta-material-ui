@@ -41,6 +41,10 @@ class TimePicker extends Component {
      */
     format: PropTypes.oneOf(['ampm', '24hr']),
     /**
+     * How many minutes should be added/subtracted when moving the clock pointer.
+     */
+    minutesStep: PropTypes.number,
+    /**
      * Override the label of the 'OK' button.
      */
     okLabel: PropTypes.node,
@@ -50,6 +54,10 @@ class TimePicker extends Component {
      * and the second argument will be the new Date instance.
      */
     onChange: PropTypes.func,
+    /**
+     * Callback function fired when the TimePicker is tapped or clicked.
+     */
+    onClick: PropTypes.func,
     /**
      * Callback function fired when the TimePicker dialog is dismissed.
      */
@@ -62,10 +70,6 @@ class TimePicker extends Component {
      * Callback function fired when the TimePicker dialog is shown.
      */
     onShow: PropTypes.func,
-    /**
-     * Callback function fired when the TimePicker is tapped or clicked.
-     */
-    onTouchTap: PropTypes.func,
     /**
      * If true, uses ("noon" / "midnight") instead of ("12 a.m." / "12 p.m.").
      *
@@ -98,6 +102,7 @@ class TimePicker extends Component {
     pedantic: false,
     style: {},
     value: null,
+    minutesStep: 1,
   };
 
   static contextTypes = {
@@ -158,8 +163,8 @@ class TimePicker extends Component {
       this.openDialog();
     }
 
-    if (this.props.onTouchTap) {
-      this.props.onTouchTap(event);
+    if (this.props.onClick) {
+      this.props.onClick(event);
     }
   };
 
@@ -185,12 +190,13 @@ class TimePicker extends Component {
       format,
       okLabel,
       onFocus, // eslint-disable-line no-unused-vars
-      onTouchTap, // eslint-disable-line no-unused-vars
+      onClick, // eslint-disable-line no-unused-vars
       onShow,
       onDismiss,
       pedantic,
       style,
       textFieldStyle,
+      minutesStep,
       ...other
     } = this.props;
 
@@ -205,7 +211,7 @@ class TimePicker extends Component {
           ref="input"
           value={time === emptyTime ? null : formatTime(time, format, pedantic)}
           onFocus={this.handleFocusInput}
-          onTouchTap={this.handleTouchTapInput}
+          onClick={this.handleTouchTapInput}
         />
         <TimePickerDialog
           ref="dialogWindow"
@@ -219,6 +225,7 @@ class TimePicker extends Component {
           cancelLabel={cancelLabel}
           autoOk={autoOk}
           style={dialogStyle}
+          minutesStep={minutesStep}
         />
       </div>
     );

@@ -21,7 +21,7 @@ function getStyles(props, context) {
   const styles = {
     root: {
       color: props.disabled ? disabledColor : textColor,
-      cursor: props.disabled ? 'not-allowed' : 'pointer',
+      cursor: props.disabled ? 'default' : 'pointer',
       minHeight: props.desktop ? '32px' : '48px',
       lineHeight: props.desktop ? '32px' : '48px',
       fontSize: props.desktop ? 15 : 16,
@@ -63,6 +63,9 @@ class MenuItem extends Component {
     /**
      * Location of the anchor for the popover of nested `MenuItem`
      * elements.
+     * Options:
+     * horizontal: [left, middle, right]
+     * vertical: [top, center, bottom].
      */
     anchorOrigin: propTypes.origin,
     /**
@@ -118,7 +121,7 @@ class MenuItem extends Component {
      *
      * @param {object} event TouchTap event targeting the menu item.
      */
-    onTouchTap: PropTypes.func,
+    onClick: PropTypes.func,
     /**
      * Can be used to render primary text within the menu item.
      */
@@ -136,6 +139,14 @@ class MenuItem extends Component {
      */
     style: PropTypes.object,
     /**
+     * Location on the popover of nested `MenuItem` elements that will attach
+     * to the anchor's origin.
+     * Options:
+     * horizontal: [left, middle, right]
+     * vertical: [top, center, bottom].
+     */
+    targetOrigin: propTypes.origin,
+    /**
      * The value of the menu item.
      */
     value: PropTypes.any,
@@ -148,6 +159,7 @@ class MenuItem extends Component {
     disabled: false,
     focusState: 'none',
     insetChildren: false,
+    targetOrigin: {horizontal: 'left', vertical: 'top'},
   };
 
   static contextTypes = {
@@ -194,13 +206,13 @@ class MenuItem extends Component {
 
   cloneMenuItem = (item) => {
     return React.cloneElement(item, {
-      onTouchTap: (event) => {
+      onClick: (event) => {
         if (!item.props.menuItems) {
           this.handleRequestClose();
         }
 
-        if (item.props.onTouchTap) {
-          item.props.onTouchTap(event);
+        if (item.props.onClick) {
+          item.props.onClick(event);
         }
       },
     });
@@ -214,8 +226,8 @@ class MenuItem extends Component {
       anchorEl: ReactDOM.findDOMNode(this),
     });
 
-    if (this.props.onTouchTap) {
-      this.props.onTouchTap(event);
+    if (this.props.onClick) {
+      this.props.onClick(event);
     }
   };
 
@@ -242,6 +254,7 @@ class MenuItem extends Component {
       style,
       animation,
       anchorOrigin,
+      targetOrigin,
       value, // eslint-disable-line no-unused-vars
       ...other
     } = this.props;
@@ -286,6 +299,7 @@ class MenuItem extends Component {
           anchorOrigin={anchorOrigin}
           anchorEl={this.state.anchorEl}
           open={this.state.open}
+          targetOrigin={targetOrigin}
           useLayerForClickAway={false}
           onRequestClose={this.handleRequestClose}
         >
@@ -294,7 +308,7 @@ class MenuItem extends Component {
           </Menu>
         </Popover>
       );
-      other.onTouchTap = this.handleTouchTap;
+      other.onClick = this.handleTouchTap;
     }
 
     return (

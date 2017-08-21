@@ -19,7 +19,7 @@ function getStyles(props, context) {
 
   const styles = {
     root: {
-      // Nested div bacause the List scales x faster than it scales y
+      // Nested div because the List scales x faster than it scales y
       zIndex: muiTheme.zIndex.menu,
       maxHeight: maxHeight,
       overflowY: maxHeight ? 'auto' : null,
@@ -176,7 +176,7 @@ class Menu extends Component {
   constructor(props, context) {
     super(props, context);
     const filteredChildren = this.getFilteredChildren(props.children);
-    const selectedIndex = this.getSelectedIndex(props, filteredChildren);
+    const selectedIndex = this.getLastSelectedIndex(props, filteredChildren);
 
     const newFocusIndex = props.disableAutoFocus ? -1 : selectedIndex >= 0 ? selectedIndex : 0;
     if (newFocusIndex !== -1 && props.onMenuItemFocusChange) {
@@ -199,8 +199,14 @@ class Menu extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
+    let selectedIndex;
     const filteredChildren = this.getFilteredChildren(nextProps.children);
-    const selectedIndex = this.getSelectedIndex(nextProps, filteredChildren);
+
+    if (this.props.multiple !== true) {
+      selectedIndex = this.getLastSelectedIndex(nextProps, filteredChildren);
+    } else {
+      selectedIndex = this.state.focusIndex;
+    }
 
     const newFocusIndex = nextProps.disableAutoFocus ? -1 : selectedIndex >= 0 ? selectedIndex : 0;
     if (newFocusIndex !== this.state.focusIndex && this.props.onMenuItemFocusChange) {
@@ -226,6 +232,17 @@ class Menu extends Component {
 
   handleClickAway = (event) => {
     if (event.defaultPrevented) {
+      return;
+    }
+
+    const {focusIndex} = this.state;
+    if (focusIndex < 0) {
+      return;
+    }
+
+    const filteredChildren = this.getFilteredChildren(this.props.children);
+    const focusedItem = filteredChildren[focusIndex];
+    if (focusedItem.props.menuItems && focusedItem.props.menuItems.length > 0) {
       return;
     }
 
@@ -283,9 +300,9 @@ class Menu extends Component {
 
       Object.assign(extraProps, {
         focusState: focusState,
-        onTouchTap: (event) => {
+        onClick: (event) => {
           this.handleMenuItemTouchTap(event, child, index);
-          if (child.props.onTouchTap) child.props.onTouchTap(event);
+          if (child.props.onClick) child.props.onClick(event);
         },
         ref: isFocused ? 'focusedMenuItem' : null,
       });
@@ -312,7 +329,7 @@ class Menu extends Component {
     return menuItemCount;
   }
 
-  getSelectedIndex(props, filteredChildren) {
+  getLastSelectedIndex(props, filteredChildren) {
     let selectedIndex = -1;
     let menuItemIndex = 0;
 
@@ -367,7 +384,7 @@ class Menu extends Component {
         return;
       }
       const {primaryText} = child.props;
-      if (typeof primaryText === 'string' && new RegExp(`^${keys}`, 'i').test(primaryText)) {
+      if (typeof primaryText === 'string' && primaryText.substr(0, keys.length).toLowerCase() === keys.toLowerCase()) {
         foundIndex = index;
       }
     });

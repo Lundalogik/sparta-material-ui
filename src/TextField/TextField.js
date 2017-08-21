@@ -57,6 +57,7 @@ const getStyles = (props, context, state) => {
       color: props.disabled ? disabledTextColor : textColor,
       cursor: 'inherit',
       font: 'inherit',
+      WebkitOpacity: 1,
       WebkitTapHighlightColor: 'rgba(0,0,0,0)', // Remove mobile color flashing (deprecated style).
     },
     inputNative: {
@@ -287,6 +288,12 @@ class TextField extends Component {
   }
 
   componentWillReceiveProps(nextProps) {
+    if (nextProps.disabled && !this.props.disabled) {
+      this.setState({
+        isFocused: false,
+      });
+    }
+
     if (nextProps.errorText !== this.props.errorText) {
       this.setState({
         errorText: nextProps.errorText,

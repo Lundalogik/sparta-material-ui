@@ -12,6 +12,10 @@ import {cyan500} from 'material-ui/styles/colors';
 const SelectableList = makeSelectable(List);
 
 const styles = {
+  v1: {
+    height: 40,
+    backgroundColor: '#2196f3',
+  },
   logo: {
     cursor: 'pointer',
     fontSize: 24,
@@ -121,7 +125,8 @@ class AppNavDrawer extends Component {
         onRequestChange={onRequestChangeNavDrawer}
         containerStyle={{zIndex: zIndex.drawer - 100}}
       >
-        <div style={styles.logo} onTouchTap={this.handleTouchTapHeader}>
+        <div style={styles.v1} />
+        <div style={styles.logo} onClick={this.handleTouchTapHeader}>
           Material-UI
         </div>
         <span style={styles.version}>Version:</span>

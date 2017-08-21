@@ -38,6 +38,7 @@ class Calendar extends Component {
     onTouchTapDay: PropTypes.func,
     onTouchTapOk: PropTypes.func,
     open: PropTypes.bool,
+    openToYearSelection: PropTypes.bool,
     shouldDisableDate: PropTypes.func,
     utils: PropTypes.object,
   };
@@ -56,7 +57,7 @@ class Calendar extends Component {
 
   state = {
     displayDate: undefined,
-    displayMonthDay: true,
+    displayMonthDay: undefined,
     selectedDate: undefined,
     transitionDirection: 'left',
     transitionEnter: true,
@@ -66,6 +67,7 @@ class Calendar extends Component {
     this.setState({
       displayDate: this.props.utils.getFirstDayOfMonth(this.props.initialDate),
       selectedDate: this.props.initialDate,
+      displayMonthDay: !this.props.openToYearSelection,
     });
   }
 
@@ -78,6 +80,8 @@ class Calendar extends Component {
       });
     }
   }
+
+  calendarRefs = {};
 
   getMinDate() {
     return this.props.minDate || this.props.utils.addYears(new Date(), -100);
@@ -96,7 +100,11 @@ class Calendar extends Component {
       return false;
     }
 
-    return this.refs.calendar.isSelectedDateDisabled();
+    if (this.calendarRefs.calendar) {
+      return this.calendarRefs.calendar.isSelectedDateDisabled();
+    } else {
+      return false;
+    }
   }
 
   addSelectedDays(days) {
@@ -113,9 +121,11 @@ class Calendar extends Component {
 
   setDisplayDate(date, newSelectedDate) {
     const newDisplayDate = this.props.utils.getFirstDayOfMonth(date);
-    const direction = newDisplayDate > this.state.displayDate ? 'left' : 'right';
 
     if (newDisplayDate !== this.state.displayDate) {
+      const nextDirection = this.context.muiTheme.isRtl ? 'right' : 'left';
+      const prevDirection = this.context.muiTheme.isRtl ? 'left' : 'right';
+      const direction = newDisplayDate > this.state.displayDate ? nextDirection : prevDirection;
       this.setState({
         displayDate: newDisplayDate,
         transitionDirection: direction,
@@ -150,8 +160,11 @@ class Calendar extends Component {
   };
 
   handleMonthChange = (months) => {
+    const nextDirection = this.context.muiTheme.isRtl ? 'right' : 'left';
+    const prevDirection = this.context.muiTheme.isRtl ? 'left' : 'right';
+    const direction = months >= 0 ? nextDirection : prevDirection;
     this.setState({
-      transitionDirection: months >= 0 ? 'left' : 'right',
+      transitionDirection: direction,
       displayDate: this.props.utils.addMonths(this.state.displayDate, months),
     });
   };
@@ -182,6 +195,8 @@ class Calendar extends Component {
 
   handleWindowKeyDown = (event) => {
     if (this.props.open) {
+      const nextArrow = this.context.muiTheme.isRtl ? 'left' : 'right';
+      const prevArrow = this.context.muiTheme.isRtl ? 'right' : 'left';
       switch (keycode(event)) {
         case 'up':
           if (event.altKey && event.shiftKey) {
@@ -203,7 +218,7 @@ class Calendar extends Component {
           }
           break;
 
-        case 'right':
+        case nextArrow:
           if (event.altKey && event.shiftKey) {
             this.addSelectedYears(1);
           } else if (event.shiftKey) {
@@ -213,7 +228,7 @@ class Calendar extends Component {
           }
           break;
 
-        case 'left':
+        case prevArrow:
           if (event.altKey && event.shiftKey) {
             this.addSelectedYears(-1);
           } else if (event.shiftKey) {
@@ -356,7 +371,7 @@ class Calendar extends Component {
                   minDate={this.getMinDate()}
                   maxDate={this.getMaxDate()}
                   onTouchTapDay={this.handleTouchTapDay}
-                  ref="calendar"
+                  ref={(ref) => this.calendarRefs.calendar = ref}
                   selectedDate={this.state.selectedDate}
                   shouldDisableDate={this.props.shouldDisableDate}
                   utils={utils}

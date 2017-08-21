@@ -13,6 +13,7 @@ class TimePickerDialog extends Component {
     cancelLabel: PropTypes.node,
     format: PropTypes.oneOf(['ampm', '24hr']),
     initialTime: PropTypes.object,
+    minutesStep: PropTypes.number,
     okLabel: PropTypes.node,
     onAccept: PropTypes.func,
     onDismiss: PropTypes.func,
@@ -82,6 +83,7 @@ class TimePickerDialog extends Component {
       okLabel,
       cancelLabel,
       style,
+      minutesStep,
       ...other
     } = this.props;
 
@@ -103,13 +105,13 @@ class TimePickerDialog extends Component {
         key={0}
         label={cancelLabel}
         primary={true}
-        onTouchTap={this.handleTouchTapCancel}
+        onClick={this.handleTouchTapCancel}
       />,
       <FlatButton
         key={1}
         label={okLabel}
         primary={true}
-        onTouchTap={this.handleTouchTapOK}
+        onClick={this.handleTouchTapOK}
       />,
     ];
 
@@ -136,6 +138,7 @@ class TimePickerDialog extends Component {
             format={format}
             initialTime={initialTime}
             onChangeMinutes={onClockChangeMinutes}
+            minutesStep={minutesStep}
           />
         }
       </Dialog>

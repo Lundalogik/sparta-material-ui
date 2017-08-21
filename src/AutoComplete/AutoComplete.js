@@ -135,7 +135,7 @@ class AutoComplete extends Component {
      * Callback function that is fired when a list item is selected, or enter is pressed in the `TextField`.
      *
      * @param {string} chosenRequest Either the `TextField` input value, if enter is pressed in the `TextField`,
-     * or the text value of the corresponding list item that was selected.
+     * or the dataSource object corresponding to the list item that was selected.
      * @param {number} index The index in `dataSource` of the list item selected, or `-1` if enter is pressed in the
      * `TextField`.
      */
@@ -195,7 +195,6 @@ class AutoComplete extends Component {
     openOnFocus: false,
     onUpdateInput: () => {},
     onNewRequest: () => {},
-    searchText: '',
     menuCloseDelay: 300,
     targetOrigin: {
       vertical: 'top',
@@ -218,7 +217,7 @@ class AutoComplete extends Component {
     this.requestsList = [];
     this.setState({
       open: this.props.open,
-      searchText: this.props.searchText,
+      searchText: this.props.searchText || '',
     });
     this.timerTouchTapCloseId = null;
   }
@@ -227,6 +226,12 @@ class AutoComplete extends Component {
     if (this.props.searchText !== nextProps.searchText) {
       this.setState({
         searchText: nextProps.searchText,
+      });
+    }
+    if (this.props.open !== nextProps.open) {
+      this.setState({
+        open: nextProps.open,
+        anchorEl: ReactDOM.findDOMNode(this.refs.searchTextField),
       });
     }
   }
@@ -262,24 +267,30 @@ class AutoComplete extends Component {
 
   handleItemTouchTap = (event, child) => {
     const dataSource = this.props.dataSource;
-
     const index = parseInt(child.key, 10);
     const chosenRequest = dataSource[index];
     const searchText = this.chosenRequestText(chosenRequest);
 
-    this.setState({
-      searchText: searchText,
-    }, () => {
-      this.props.onUpdateInput(searchText, this.props.dataSource, {
-        source: 'touchTap',
-      });
-
-      this.timerTouchTapCloseId = setTimeout(() => {
-        this.timerTouchTapCloseId = null;
-        this.close();
-        this.props.onNewRequest(chosenRequest, index);
-      }, this.props.menuCloseDelay);
+    const updateInput = () => this.props.onUpdateInput(searchText, this.props.dataSource, {
+      source: 'click',
     });
+    this.timerTouchTapCloseId = () => setTimeout(() => {
+      this.timerTouchTapCloseId = null;
+      this.close();
+      this.props.onNewRequest(chosenRequest, index);
+    }, this.props.menuCloseDelay);
+
+    if (typeof this.props.searchText !== 'undefined') {
+      updateInput();
+      this.timerTouchTapCloseId();
+    } else {
+      this.setState({
+        searchText: searchText,
+      }, () => {
+        updateInput();
+        this.timerTouchTapCloseId();
+      });
+    }
   };
 
   chosenRequestText = (chosenRequest) => {
@@ -510,8 +521,6 @@ class AutoComplete extends Component {
         <TextField
           ref="searchTextField"
           autoComplete="off"
-          value={searchText}
-          onChange={this.handleChange}
           onBlur={this.handleBlur}
           onFocus={this.handleFocus}
           onKeyDown={this.handleKeyDown}
@@ -522,6 +531,10 @@ class AutoComplete extends Component {
           errorStyle={errorStyle}
           style={textFieldStyle}
           {...other}
+          // value and onChange are idiomatic properties often leaked.
+          // We prevent their overrides in order to reduce potential bugs.
+          value={searchText}
+          onChange={this.handleChange}
         />
         <Popover
           style={Object.assign({}, styles.popover, popoverStyle)}

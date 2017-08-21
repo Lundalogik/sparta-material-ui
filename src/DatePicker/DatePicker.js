@@ -102,6 +102,12 @@ class DatePicker extends Component {
      */
     onChange: PropTypes.func,
     /**
+     * Callback function that is fired when a touch tap event occurs on the Date Picker's `TextField`.
+     *
+     * @param {object} event TouchTap event targeting the `TextField`.
+     */
+    onClick: PropTypes.func,
+    /**
      * Callback function that is fired when the Date Picker's dialog is dismissed.
      */
     onDismiss: PropTypes.func,
@@ -114,11 +120,9 @@ class DatePicker extends Component {
      */
     onShow: PropTypes.func,
     /**
-     * Callback function that is fired when a touch tap event occurs on the Date Picker's `TextField`.
-     *
-     * @param {object} event TouchTap event targeting the `TextField`.
+     * If true sets the datepicker to open to year selection first.
      */
-    onTouchTap: PropTypes.func,
+    openToYearSelection: PropTypes.bool,
     /**
      * Callback function used to determine if a day's entry should be disabled on the calendar.
      *
@@ -157,6 +161,7 @@ class DatePicker extends Component {
     firstDayOfWeek: 1,
     hideCalendarDate: false,
     style: {},
+    openToYearSelection: false,
   };
 
   static contextTypes = {
@@ -234,8 +239,8 @@ class DatePicker extends Component {
   };
 
   handleTouchTap = (event) => {
-    if (this.props.onTouchTap) {
-      this.props.onTouchTap(event);
+    if (this.props.onClick) {
+      this.props.onClick(event);
     }
 
     if (!this.props.disabled) {
@@ -288,7 +293,8 @@ class DatePicker extends Component {
       onDismiss,
       onFocus, // eslint-disable-line no-unused-vars
       onShow,
-      onTouchTap, // eslint-disable-line no-unused-vars
+      onClick, // eslint-disable-line no-unused-vars
+      openToYearSelection,
       shouldDisableDate,
       hideCalendarDate,
       style,
@@ -305,7 +311,7 @@ class DatePicker extends Component {
         <TextField
           {...other}
           onFocus={this.handleFocus}
-          onTouchTap={this.handleTouchTap}
+          onClick={this.handleTouchTap}
           ref="input"
           style={textFieldStyle}
           value={this.state.date ? formatDate(this.state.date) : ''}
@@ -330,6 +336,7 @@ class DatePicker extends Component {
           ref="dialogWindow"
           shouldDisableDate={shouldDisableDate}
           hideCalendarDate={hideCalendarDate}
+          openToYearSelection={openToYearSelection}
           utils={utils}
         />
       </div>

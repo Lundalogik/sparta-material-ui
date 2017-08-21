@@ -34,7 +34,7 @@ class EnhancedTextarea extends Component {
   static propTypes = {
     defaultValue: PropTypes.any,
     disabled: PropTypes.bool,
-    hintText: PropTypes.string,
+    hintText: PropTypes.node,
     onChange: PropTypes.func,
     onHeightChange: PropTypes.func,
     rows: PropTypes.number,
@@ -68,7 +68,7 @@ class EnhancedTextarea extends Component {
   }
 
   componentDidMount() {
-    this.syncHeightWithShadow();
+    this.syncHeightWithShadow(this.props.value);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -79,7 +79,7 @@ class EnhancedTextarea extends Component {
   }
 
   handleResize = (event) => {
-    this.syncHeightWithShadow(undefined, event);
+    this.syncHeightWithShadow(this.props.value, event);
   };
 
   getInputNode() {
@@ -115,8 +115,12 @@ class EnhancedTextarea extends Component {
     newHeight = Math.max(newHeight, rowsHeight);
 
     if (this.state.height !== newHeight) {
+      const input = this.refs.input;
+      const cursorPosition = input.selectionStart;
       this.setState({
         height: newHeight,
+      }, () => {
+        input.setSelectionRange(cursorPosition, cursorPosition);
       });
 
       if (props.onHeightChange) {
@@ -126,7 +130,9 @@ class EnhancedTextarea extends Component {
   }
 
   handleChange = (event) => {
-    this.syncHeightWithShadow(event.target.value);
+    if (!this.props.hasOwnProperty('value')) {
+      this.syncHeightWithShadow(event.target.value);
+    }
 
     if (this.props.hasOwnProperty('valueLink')) {
       this.props.valueLink.requestChange(event.target.value);

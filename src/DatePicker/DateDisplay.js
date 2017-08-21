@@ -15,7 +15,7 @@ function getStyles(props, context, state) {
       float: isLandscape ? 'left' : 'none',
       fontWeight: 700,
       display: 'inline-block',
-      backgroundColor: datePicker.selectColor,
+      backgroundColor: datePicker.headerColor,
       borderTopLeftRadius: 2,
       borderTopRightRadius: isLandscape ? 0 : 2,
       borderBottomLeftRadius: isLandscape ? 2 : 0,
@@ -49,7 +49,7 @@ function getStyles(props, context, state) {
       marginBottom: 10,
     },
     yearTitle: {
-      cursor: props.disableYearSelection ? 'not-allowed' : (!selectedYear ? 'pointer' : 'default'),
+      cursor: props.disableYearSelection || selectedYear ? 'default' : 'pointer',
     },
   };
 
@@ -152,14 +152,14 @@ class DateDisplay extends Component {
     return (
       <div {...other} style={prepareStyles(styles.root, style)}>
         <SlideInTransitionGroup style={styles.year} direction={this.state.transitionDirection}>
-          <div key={year} style={styles.yearTitle} onTouchTap={this.handleTouchTapYear}>
+          <div key={year} style={styles.yearTitle} onClick={this.handleTouchTapYear}>
             {year}
           </div>
         </SlideInTransitionGroup>
         <SlideInTransitionGroup style={styles.monthDay} direction={this.state.transitionDirection}>
           <div
             key={dateTime}
-            onTouchTap={this.handleTouchTapMonthDay}
+            onClick={this.handleTouchTapMonthDay}
             style={styles.monthDayTitle}
           >
             {dateTime}

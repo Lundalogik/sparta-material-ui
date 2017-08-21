@@ -2,7 +2,6 @@ import React, {Component, cloneElement} from 'react';
 import PropTypes from 'prop-types';
 import transitions from '../styles/transitions';
 import {fade} from '../utils/colorManipulator';
-import {createChildFragment} from '../utils/childUtils';
 import EnhancedButton from '../internal/EnhancedButton';
 import Paper from '../Paper';
 
@@ -195,6 +194,12 @@ class RaisedButton extends Component {
      * Override the inline-styles of the button's label element.
      */
     labelStyle: PropTypes.object,
+    /**
+     * Callback function fired when the button is touch-tapped.
+     *
+     * @param {object} event TouchTap event targeting the button.
+     */
+    onClick: PropTypes.func,
     /** @ignore */
     onMouseDown: PropTypes.func,
     /** @ignore */
@@ -207,12 +212,6 @@ class RaisedButton extends Component {
     onTouchEnd: PropTypes.func,
     /** @ignore */
     onTouchStart: PropTypes.func,
-    /**
-     * Callback function fired when the button is touch-tapped.
-     *
-     * @param {object} event TouchTap event targeting the button.
-     */
-    onTouchTap: PropTypes.func,
     /**
      * Override the inline style of the button overlay.
      */
@@ -392,7 +391,7 @@ class RaisedButton extends Component {
     };
 
     const labelElement = label && (
-      <span style={prepareStyles(Object.assign(styles.label, labelStyle))}>
+      <span style={prepareStyles(Object.assign(styles.label, labelStyle))} key="labelElement">
         {label}
       </span>
     );
@@ -400,21 +399,20 @@ class RaisedButton extends Component {
     const iconCloned = icon && cloneElement(icon, {
       color: icon.props.color || styles.label.color,
       style: Object.assign(styles.icon, icon.props.style),
+      key: 'iconCloned',
     });
 
     // Place label before or after children.
-    const childrenFragment = labelPosition === 'before' ?
-    {
+    const enhancedButtonChildren = labelPosition === 'before' ?
+    [
       labelElement,
       iconCloned,
       children,
-    } : {
+    ] : [
       children,
       iconCloned,
       labelElement,
-    };
-
-    const enhancedButtonChildren = createChildFragment(childrenFragment);
+    ];
 
     return (
       <Paper

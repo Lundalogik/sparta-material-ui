@@ -12,10 +12,12 @@ import NestedList from './NestedList';
 
 function getStyles(props, context, state) {
   const {
+    autoGenerateNestedIndicator,
     insetChildren,
     leftAvatar,
     leftCheckbox,
     leftIcon,
+    nestedItems,
     nestedLevel,
     rightAvatar,
     rightIcon,
@@ -55,7 +57,9 @@ function getStyles(props, context, state) {
     innerDiv: {
       marginLeft: nestedLevel * listItem.nestedLevelDepth,
       paddingLeft: leftIcon || leftAvatar || leftCheckbox || insetChildren ? 72 : 16,
-      paddingRight: rightIcon || rightAvatar || rightIconButton ? 56 : rightToggle ? 72 : 16,
+      paddingRight: rightIcon || rightAvatar || rightIconButton ||
+                    (nestedItems.length && autoGenerateNestedIndicator) ?
+                    56 : rightToggle ? 72 : 16,
       paddingBottom: singleAvatar ? 20 : 16,
       paddingTop: singleNoAvatar || threeLine ? 16 : 20,
       position: 'relative',
@@ -230,6 +234,12 @@ class ListItem extends Component {
      */
     nestedListStyle: PropTypes.object,
     /**
+     * Callback function fired when the list item is touch-tapped.
+     *
+     * @param {object} event TouchTap event targeting the list item.
+     */
+    onClick: PropTypes.func,
+    /**
      * Callback function fired when the `ListItem` is focused or blurred by the keyboard.
      *
      * @param {object} event `focus` or `blur` event targeting the `ListItem`.
@@ -250,8 +260,6 @@ class ListItem extends Component {
     onTouchEnd: PropTypes.func,
     /** @ignore */
     onTouchStart: PropTypes.func,
-    /** @ignore */
-    onTouchTap: PropTypes.func,
     /**
      * Control toggle state of nested list.
      */
@@ -459,7 +467,20 @@ class ListItem extends Component {
     this.props.onMouseLeave(event);
   };
 
+  handleTouchTap = (event) => {
+    if (this.props.onClick) {
+      this.props.onClick(event);
+    }
+
+    if (this.props.primaryTogglesNestedList) {
+      this.handleNestedListToggle(event);
+    }
+  };
+
   handleNestedListToggle = (event) => {
+    if (this.props.leftCheckbox) {
+      event.preventDefault();
+    }
     event.stopPropagation();
 
     if (this.props.open === null) {
@@ -514,7 +535,7 @@ class ListItem extends Component {
 
     // Stop the event from bubbling up to the list-item
     event.stopPropagation();
-    if (iconButton && iconButton.props.onTouchTap) iconButton.props.onTouchTap(event);
+    if (iconButton && iconButton.props.onClick) iconButton.props.onClick(event);
   };
 
   handleTouchStart = (event) => {
@@ -563,7 +584,7 @@ class ListItem extends Component {
       onMouseLeave, // eslint-disable-line no-unused-vars
       onNestedListToggle, // eslint-disable-line no-unused-vars
       onTouchStart, // eslint-disable-line no-unused-vars
-      onTouchTap,
+      onClick, // eslint-disable-line no-unused-vars
       rightAvatar,
       rightIcon,
       rightIconButton,
@@ -639,7 +660,7 @@ class ListItem extends Component {
         onKeyboardFocus: this.handleRightIconButtonKeyboardFocus,
         onMouseEnter: this.handleRightIconButtonMouseEnter,
         onMouseLeave: this.handleRightIconButtonMouseLeave,
-        onTouchTap: this.handleRightIconButtonTouchTap,
+        onClick: this.handleRightIconButtonTouchTap,
         onMouseDown: this.handleRightIconButtonMouseUp,
         onMouseUp: this.handleRightIconButtonMouseUp,
       };
@@ -649,7 +670,7 @@ class ListItem extends Component {
         rightIconButtonElement = this.state.open ?
           <IconButton><OpenIcon /></IconButton> :
           <IconButton><CloseIcon /></IconButton>;
-        rightIconButtonHandlers.onTouchTap = this.handleNestedListToggle;
+        rightIconButtonHandlers.onClick = this.handleNestedListToggle;
       }
 
       this.pushElement(
@@ -708,7 +729,8 @@ class ListItem extends Component {
               onMouseEnter={this.handleMouseEnter}
               onTouchStart={this.handleTouchStart}
               onTouchEnd={this.handleTouchEnd}
-              onTouchTap={primaryTogglesNestedList ? this.handleNestedListToggle : onTouchTap}
+              onClick={this.handleTouchTap}
+              disabled={disabled}
               ref={(node) => this.button = node}
               style={Object.assign({}, styles.root, style)}
             >
